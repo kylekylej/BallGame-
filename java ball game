@@ -1,0 +1,414 @@
+//peg game
+
+//I added an undo button that will undo a move one time before making another move
+
+//Kyle Johnson
+//4/11/23
+
+import javafx.application.*;
+import javafx.scene.*;
+import javafx.stage.*;
+import javafx.scene.layout.*;
+import javafx.scene.control.*;
+import java.util.*;
+import javafx.geometry.*;
+import javafx.scene.paint.*;
+import javafx.scene.image.*;
+import javafx.event.*;
+import javafx.animation.*;
+import javafx.application.*;
+import javafx.scene.*;
+import javafx.scene.layout.*;
+import javafx.scene.canvas.*;
+import javafx.scene.input.*;
+
+public class ProjectBallGame extends Application
+{
+   //variables for number of balls and moves avaliable
+   int ballsLeft = 15;
+   int movesAvaliable = 2;
+   int moveCounter = 0;
+   
+   //variables used for undoing a move
+   int lastYF = 0;
+   int lastXF = 0;
+   int lastYT =0;
+   int lastXT =0;
+      
+   int lastX = 0;
+   int lastY = 0;
+   
+   //new hbox
+   HBox topBox = new HBox();
+   
+   //new borderpane
+   BorderPane borderPane = new BorderPane();
+   
+   //new grid pane
+   GridPane gridPane = new GridPane();
+   
+   //new game. utilizes a method built below
+   GameGrid[][] grid = new GameGrid[4][4];
+
+   //adding a label
+   Label labelTop = new Label();
+   
+   //button used for the undo
+   Button undo = new Button("  UNDO  ");
+   
+   
+   public void start(Stage stage)
+   {
+      //centering gridpane 
+		  gridPane.setAlignment(Pos.CENTER);
+      
+      gridPane.setHgap(10);
+      gridPane.setVgap(10);    
+      
+      //gridpane set to center of borderpane  
+      borderPane.setCenter(gridPane);  
+      
+      //setting label text
+      labelTop.setText("Balls Left: " + ballsLeft + " Possible moves: " + movesAvaliable + "  ");
+      
+      //centering hbox
+      topBox.setAlignment(Pos.CENTER);
+      
+      //adding label to the hbox
+      topBox.getChildren().add(labelTop);
+      
+      //adding undo button to the hbox
+      topBox.getChildren().add(undo);
+      
+      //hbox is set to top of borderpane      
+      borderPane.setTop(topBox);
+      
+      //undo button set to invisble because no move has been made
+      undo.setVisible(false);
+  
+      //creates the grid of circles      
+      for(int i = 0;i<4;i++)
+      {
+         for (int j=0; j<4; j++)
+         {
+            GameGrid newGame = new GameGrid(i,j);   
+            gridPane.add(newGame, i, j);
+            grid[j][i]=newGame;            
+         }
+      }
+      
+      //default board configuration 
+	    grid[2][0].setVisible(false);
+      
+      //calls the method to make the buttons
+      NewButton();
+      
+		  // create a scene
+		  Scene scene = new Scene(borderPane, 600, 600);
+
+		  // set the scene
+		  stage.setScene(scene);
+      stage.setTitle("Balls");
+      stage.show();
+   }
+      
+   public void NewButton()
+   {
+      //setting moves avaliable to 0
+      movesAvaliable = 0;
+      
+      //sets all buttons to invisible
+      for(int i = 0; i<4; i++)
+      {
+         for(int j = 0; j<4; j++)
+         {
+            grid[i][j].getTopB().setVisible(false);
+            grid[i][j].getRightB().setVisible(false);
+            grid[i][j].getLeftB().setVisible(false);
+            grid[i][j].getBottomB().setVisible(false);
+         }
+      }
+      
+      //determines which buttons will be visible based on the circles on the board
+      for(int i = 0; i<4; i++)
+      {
+         for(int  j= 0; j<4; j++)
+         {
+            if(grid[i][j].isVisible()==false)
+            {
+               if(i-2>=0)
+               {
+                  if(grid[i-1][j].isVisible()==true && grid[i-2][j].isVisible()==true)
+                  {
+                     grid[i-2][j].getTopB().setVisible(true);
+                     movesAvaliable++;
+                  }
+               }
+               if(i+2<4)
+               {
+                  if(grid[i+1][j].isVisible()==true && grid[i+2][j].isVisible()==true)
+                  {
+                     grid[i+2][j].getBottomB().setVisible(true);
+                     movesAvaliable++;
+                  }
+               }
+               
+               if(j-2>=0)
+               {
+                  if(grid[i][j-1].isVisible()==true && grid[i][j-2].isVisible()==true)
+                  {
+                     grid[i][j-2].getLeftB().setVisible(true);
+                     movesAvaliable++;
+                  }
+               }
+               
+               if(j+2<=3)
+               {
+                  if(grid[i][j+1].isVisible()==true && grid[i][j+2].isVisible()==true)
+                  {
+                     grid[i][j+2].getRightB().setVisible(true);
+                     movesAvaliable++;
+                  }
+               }
+            }
+         }
+      }
+   }
+   
+            
+   public void move(int x, int y, Object clicked)
+   {    
+      if(clicked == grid[y][x].getTopB())
+      {
+         //set the correct circles visible and invisble
+         grid[y+1][x].setVisible(false);
+         grid[y+2][x].setVisible(true);
+         
+         //setting the last positions made visble/invisble
+         //these variables are used when the undo button is pushed      
+         lastX = x;
+         lastY = y;
+
+         lastYF = y+1;
+         lastXF = x;
+         lastYT = y+2;
+         lastXT = x;
+                         
+         grid[y][x].setVisible(false);
+
+         moveCounter++;
+      }
+      
+      else if(clicked == grid[y][x].getBottomB())
+      {
+         //set the correct circles visible and invisble
+         grid[y-1][x].setVisible(false);
+         grid[y-2][x].setVisible(true);
+         
+         //setting the last positions made visble/invisble
+         //these variables are used when the undo button is pushed   
+         lastX = x;
+         lastY = y;
+         
+         lastYF = y-1;
+         lastXF = x;
+         lastYT = y-2;
+         lastXT = x;
+
+         grid[y][x].setVisible(false);
+         moveCounter++;
+      }
+           
+      else if(clicked == grid[y][x].getLeftB())
+      {
+         //set the correct circles visible and invisble
+         grid[y][x+1].setVisible(false);
+         grid[y][x+2].setVisible(true);
+         
+         //setting the last positions made visble/invisble
+         //these variables are used when the undo button is pushed 
+         lastX = x;
+         lastY = y;
+         
+         lastYF = y;
+         lastXF = x+1;
+         lastYT = y;
+         lastXT = x+2;
+         
+         grid[y][x].setVisible(false);
+         moveCounter++;
+      }
+      
+      else if(clicked == grid[y][x].getRightB())
+      {
+         //set the correct circles visible and invisble
+         grid[y][x-1].setVisible(false);
+         grid[y][x-2].setVisible(true);
+         
+         //setting the last positions made visble/invisble
+         //these variables are used when the undo button is pushed 
+         lastX = x;
+         lastY = y;
+         
+         lastYF = y;
+         lastXF = x-1;
+         lastYT = y;
+         lastXT = x-2;
+         
+         grid[y][x].setVisible(false);
+         moveCounter++;
+      }
+         
+      //if move counter is zero, undo button will be hidden   
+      if(moveCounter == 0)
+      {  
+         undo.setVisible(false);  
+      }
+      
+      //if counter is not zero, the undo button will be avaliable
+      else
+      {
+         undo.setVisible(true); 
+         if(clicked == undo)
+         {
+            //sets the circles back to the way they were on the previous move
+            grid[lastY][lastX].setVisible(true);
+            grid[lastYF][lastXF].setVisible(true);
+            grid[lastYT][lastXT].setVisible(false);
+            
+            //once the undo button is pushed, movecounter is put back to zero and undo button is hidden
+            moveCounter = 0; 
+            undo.setVisible(false);     
+         }
+      } 
+   } 
+      
+   //draw circle method   
+   public class Circle extends Canvas
+   {
+      public Circle()
+      {
+         GraphicsContext gc = getGraphicsContext2D();
+         
+         setHeight(80);
+         setWidth(80);
+      }
+      public void drawCircle()
+      {
+         GraphicsContext gc = getGraphicsContext2D();
+         gc.fillOval(0,0,80,80);
+      }
+   }
+    
+   public static void main(String args[])
+   {
+	// launch the application
+	   launch(args); 
+   }
+   
+   public class GameGrid extends GridPane
+   {
+      //empty buttons being made
+      Button top;
+      Button bottom;
+      Button left;
+      Button right;
+      
+      // x and y variables 
+      int x;
+      int y;
+      
+      public GameGrid (int y, int x)
+      {
+         this.y =y;
+         this.x = x;
+         
+         //making the buttons
+         top = new Button();
+         bottom = new Button();
+         left = new Button();
+         right = new Button();
+         
+         //calls the circle method
+         Circle c = new Circle();
+         c.drawCircle();
+         
+         //setting the size of the buttons around the circles       
+         top.setPrefSize(80,20);
+         bottom.setPrefSize(80,20);
+         right.setPrefSize(20,80);
+         left.setPrefSize(20,80);
+
+         //buttons surrounding circle set to button listener 
+         top.setOnAction(new ButtonListener());
+         bottom.setOnAction(new ButtonListener());
+         left.setOnAction(new ButtonListener());
+         right.setOnAction(new ButtonListener());
+         
+         //undo button set to the button listener
+         undo.setOnAction(new ButtonListener());
+
+         //adds the buttons and the circles to the screen
+         add(top,1,0);
+         add(bottom,1,2);
+         add(left,0,1);
+         add(right,2,1);
+         add(c,1,1);
+      }
+            
+      public class ButtonListener implements EventHandler<ActionEvent>
+      {
+         public void handle(ActionEvent e)
+         {
+            move(y,x, e.getSource());
+            NewButton();
+            
+            //when undo button is pushed, the number of balls increases by one
+            if(e.getSource()==undo)
+            {
+               ballsLeft++;
+            }
+            else
+            {
+               ballsLeft--;
+            }
+            
+            //prints the number of balls and moves avaliable 
+            labelTop.setText("Balls Left: " + ballsLeft + " Possible moves: " + movesAvaliable +  "   ");
+            
+            //if moves available is 0 game over
+            if(movesAvaliable ==0)
+            {
+               labelTop.setText("YOU LOOSE :( ");
+               borderPane.setBackground(new Background(new BackgroundFill(Color.RED, CornerRadii.EMPTY, Insets.EMPTY)));
+               undo.setVisible(false);
+            }
+            
+            //if moves availiable is 1, you win!
+            if(ballsLeft ==1)
+            {
+               labelTop.setText("YOU WIN !!! :)");
+               borderPane.setBackground(new Background(new BackgroundFill(Color.GREEN, CornerRadii.EMPTY, Insets.EMPTY)));
+            }
+         }
+      }
+      
+      //access buttons around the circle
+      public Button getTopB()
+      {
+         return top;
+      }
+      public Button getRightB()
+      {
+         return right;
+      }
+      public Button getLeftB()
+      {
+         return left;
+      }
+      public Button getBottomB()
+      {
+         return bottom;
+      } 
+   }    
+}
